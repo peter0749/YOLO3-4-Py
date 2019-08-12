@@ -134,6 +134,33 @@ cdef class Detector:
 
         free_detections(dets, num)
         return res
+    
+    def detect_foreground(self, Image image, float thresh=.5, float hier_thresh=.5, float nms=.45):
+        """
+        Detect objects in an image using the model.
+        :param image: Image to process.
+        :param thresh: Threshold parameter.
+        :param hier_thresh: Hier Threshold Parameter.
+        :param nms: None maximal suppression parameter.
+        :return:
+        """
+        cdef int num = 0
+        cdef int* pnum = &num
+        network_predict_image(self.net, image.img)
+        dets = get_network_boxes(self.net, image.img.w, image.img.h, thresh, hier_thresh, <int*>0, 0, pnum)
+
+        num = pnum[0]
+        if (nms > 0):
+            do_nms_obj(dets, num, self.meta.classes, nms)
+
+        res = []
+        for j in range(num):
+            b = dets[j].bbox
+            res.append((dets[j].objectness, (b.x, b.y, b.w, b.h)))
+        res = sorted(res, key=lambda x: -x[0])
+
+        free_detections(dets, num)
+        return res
 
     # End of adapted code block
 
