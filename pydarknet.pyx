@@ -155,8 +155,9 @@ cdef class Detector:
 
         res = []
         for j in range(num):
-            b = dets[j].bbox
-            res.append((dets[j].objectness, (b.x, b.y, b.w, b.h)))
+            if dets[j].objectness>0:
+                b = dets[j].bbox
+                res.append((dets[j].objectness, (b.x, b.y, b.w, b.h)))
         res = sorted(res, key=lambda x: -x[0])
 
         free_detections(dets, num)
